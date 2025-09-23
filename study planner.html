@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Study Planner</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #4a90e2;
+      color: #fff;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 800px;
+      margin: 2rem auto;
+      background: #fff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    form {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    input, button {
+      padding: 0.7rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    input[type="text"], input[type="date"] {
+      flex: 1;
+    }
+
+    button {
+      background: #4a90e2;
+      color: #fff;
+      cursor: pointer;
+      border: none;
+    }
+
+    button:hover {
+      background: #357ABD;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      background: #f9f9f9;
+      margin: 0.5rem 0;
+      padding: 1rem;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 5px solid #4a90e2;
+    }
+
+    .completed {
+      text-decoration: line-through;
+      color: gray;
+      border-left: 5px solid green;
+    }
+
+    .progress-container {
+      margin-top: 2rem;
+    }
+
+    .progress-bar {
+      width: 100%;
+      background: #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+      height: 20px;
+    }
+
+    .progress {
+      height: 100%;
+      background: #4a90e2;
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    .timeline {
+      margin-top: 2rem;
+      border-left: 2px solid #4a90e2;
+      padding-left: 1rem;
+    }
+
+    .timeline-item {
+      margin: 1rem 0;
+    }
+
+    .date {
+      font-size: 0.9rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📚 Study Planner</h1>
+    <p>Organize tasks, set goals, and boost productivity</p>
+  </header>
+
+  <div class="container">
+    <form id="taskForm">
+      <input type="text" id="taskInput" placeholder="Enter study task..." required>
+      <input type="date" id="dateInput" required>
+      <button type="submit">Add Task</button>
+    </form>
+
+    <ul id="taskList"></ul>
+
+    <div class="progress-container">
+      <h3>Progress</h3>
+      <div class="progress-bar">
+        <div class="progress" id="progress"></div>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <h3>Timeline</h3>
+      <div id="timelineList"></div>
+    </div>
+  </div>
+
+  <script>
+    const taskForm = document.getElementById("taskForm");
+    const taskInput = document.getElementById("taskInput");
+    const dateInput = document.getElementById("dateInput");
+    const taskList = document.getElementById("taskList");
+    const progressBar = document.getElementById("progress");
+    const timelineList = document.getElementById("timelineList");
+
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+    // Save to local storage
+    function saveTasks() {
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    // Update progress bar
+    function updateProgress() {
+      const completed = tasks.filter(t => t.completed).length;
+      const percent = tasks.length ? (completed / tasks.length) * 100 : 0;
+      progressBar.style.width = percent + "%";
+    }
+
+    // Render tasks
+    function renderTasks() {
+      taskList.innerHTML = "";
+      timelineList.innerHTML = "";
+
+      tasks.forEach((task, index) => {
+        const li = document.createElement("li");
+        li.className = task.completed ? "completed" : "";
+        li.innerHTML = `
+          <span>${task.text} - <small>${task.date}</small></span>
+          <button onclick="toggleTask(${index})">✔</button>
+          <button onclick="deleteTask(${index})">🗑</button>
+        `;
+        taskList.appendChild(li);
+
+        const timelineItem = document.createElement("div");
+        timelineItem.className = "timeline-item";
+        timelineItem.innerHTML = `<div><strong>${task.text}</strong></div>
+                                  <div class="date">${task.date}</div>`;
+        timelineList.appendChild(timelineItem);
+      });
+
+      updateProgress();
+    }
+
+    // Add task
+    taskForm.addEventListener("submit", e => {
+      e.preventDefault();
+      const taskText = taskInput.value.trim();
+      const taskDate = dateInput.value;
+
+      if (taskText && taskDate) {
+        tasks.push({ text: taskText, date: taskDate, completed: false });
+        saveTasks();
+        renderTasks();
+        taskInput.value = "";
+        dateInput.value = "";
+      }
+    });
+
+    // Toggle task completion
+    function toggleTask(index) {
+      tasks[index].completed = !tasks[index].completed;
+      saveTasks();
+      renderTasks();
+    }
+
+    // Delete task
+    function deleteTask(index) {
+      tasks.splice(index, 1);
+      saveTasks();
+      renderTasks();
+    }
+
+    // Initialize
+    renderTasks();
+  </script>
+</body>
+</html>
